@@ -1,0 +1,588 @@
+============================================== ERRORS ========================================
+1. java not working
+- most of the issue is with env variables. path not being set properly.
+first locate the bin dir of your jdk in your filesystem, copy that path
+search env in windows search -> env vars -> under system variables, find "Path" -> edit it and add jdk path
+that you had copied earlier
+
+make sure there is no wrong jdk path before this new path, since windows will pick the first path that it finds
+while adding to path.
+you can add the full path or can also write something like, %JAVA_HOME%\bin. Make sure
+JAVA_HOME is set to correct jdk dir
+first set a new env var, JAVA_HOME, set its value till the jdk path, then in path var, add JAVA_HOME plus bin
+like, %JAVA_HOME%\bin
+
+var name: JAVA_HOME
+var value: C:\Program Files\Java\jdk-1.8
+
+add in Path var: %JAVA_HOME%\bin
+
+helpful commands:
+java -version
+javac -version
+where java, location of java
+where javac
+
+
+2. mvn test not running
+- if it is not working cos there is no jdk or path is pointing to jre then it won't work, it needs JDK.
+Setting correct path of jdk will solve the issue.
+
+helpful commands:
+mvn --version, should have jdk n not jre in the output
+mvn validate
+mvn compile
+mvn test, run tests if any
+mvn package, makes jar, under target dir
+mvn clear, deletes target dir
+mvn install
+
+if using spring boot, can also use mvnw, ./mvnw validate
+mvn wrapper included with spring boot
+
+
+
+=============================================== MAVEN ===================================================
+1. mvn package, makes jar. In target dir. First it makes a jar with only source code *.jar.original then it
+repackages it to include all dependencies, *.jar, it is called fat jar as it has everything and it's big
+
+Maven also manages all dependencies. Just need to add the dependency xml in pom.xml file
+search maven lib name in google, open the maven repo site, copy the xml, paste in project pom.xml
+
+
+
+
+================================================ IOC =======================================================
+IOC - Inversion Of Control
+Normally if we need an object, we manually create it but with spring we do not need to.
+Spring provides whatever object we need
+Spring has IOC Container which contains objects of all classes, what object we need, it provides
+Control has been given to spring, hence inversion of control
+
+Application Context - Way to achieve IOC container. Both terms can be used interchangeably
+
+Actually IOC container does not contain objects of all classes. It scans components.
+We need to add annotation @Component to the classes which IOC should scan and keep with itself
+
+@Component
+class MyComponent{
+    // class is automatically registered as a spring bean
+}
+
+Annotations can be used with, classes, interfaces, fields, methods
+
+Beans - Objects in spring IOC container. More specifically singleton objects, shared within the full app.
+They don't create problem since spring assumes they are stateless, no shared mutable state
+If we use state then there will be inconsistencies, race conditions, concurrency problems
+
+So no mutable shared state or proper synchronization
+
+OR
+
+Don't use singleton scope. Use these instead
+@Scope("prototype") → new instance every time
+@RequestScope → one per HTTP request
+@SessionScope → one per user session
+
+============================================== SpringBootApplication ============================================
+@SpringBootApplication - class annotation, applied only once in the project, on the main class(class which has
+main method).
+
+Does work of 3 annotations:
+@ComponentScan: Scans for beans to add into IOC Container
+Important point, @Component classes can only be added to classes which are in the same package as @SpringBootApplicaton
+package.
+If we add components in class in some other packages, IOC container will not scan that class
+
+com.app   <-- main class here
+com.app.service
+com.app.repo
+this structure works
+
+com.app.main        <-- main class
+com.external.utils  <-- your "separate package"
+this doesn't
+
+So place main class at root package
+com.app   <-- main class here
+   ├── service
+   ├── repo
+   ├── util
+
+Or manually define where to scan components
+@SpringBootApplication
+@ComponentScan(basePackages = {
+    "com.app",
+    "com.external.utils"
+})
+public class Application {
+}
+
+@EnableAutoConfiguration: Automatically uses configs. Ex if we use a DB(add it's dependency) and then ip port,
+password in config then spring will use the configs and make connections and everything by itself, we don't
+have to manually do things
+
+
+@Configuration: class annotation. When used on a class, it indicates that the class will provide some configs
+
+================================================= Dependency Injection ===========================================
+@AutoWired, field annotation. no need to write new Class(), it adds object automatically
+adds dependency
+
+class SomeClass{
+    @AutoWired
+    private Dog dog;
+
+    public String someMethod(){
+        return dog.bark();
+    }
+}
+
+So due to IOC, multiple objects of same class will not be made. Only a single object will be used in whole project
+Similar to object pool??
+
+
+==================================================== APIs ===========================================================
+@RestController: makes bean. Has @Component annotation. Special type of component to handle http requests.
+We write API endpoints here.
+All return values in endpoints inside this component is automatically converted to JSON ???
+
+@GetMapping("/endpoint-name"): method annotation. get end point with specific end point name
+
+@RequestMapping("/context"): class annotation. maps the full class to some endpoint. So url: ip:port/context/endpoint
+if there is also a @GetMapping.
+If no separate GetMapping or PostMapping then only RequestMapping endpoint is used. So url: ip:port/context/
+
+@GetMapping, @PostMapping, can also be used without specifying any end point name.
+
+@PostMapping("endpoint-name"): similar to @GetMapping. Used for POST requests.
+    @PostMapping
+    public void createEntry(@RequestBody JournalEntry journalEntry){
+
+    }
+@RequestBody is used with @PostMapping, tells spring to map the incoming json request to the desired class
+
+@PathVariable: used to get path variables in get requests
+    @GetMapping("/id/{myId}")
+    public JournalEntry getJournalEntryById(@PathVariable long myId){
+        return journalEntries.get(myId);
+    }
+
+url: ip:port/journal/id/2, here 2 is the path variable
+In @GetMapping("/id/{myId}"), {myId} is the path variable. In @PathVariable, variable name should be same as in
+@GetMapping
+
+
+==================================================== MongoDB ====================================================
+default url- mongodb://localhost:27017
+while installing mongoDB install as a network service
+search in windows, services, will find mongoDB running, can stop it from there
+can also start stop from cmd
+open cmd as admin, net stop mongoDB, net start mongoDB. mongoDB was the service name given during installation
+
+like sql has tables, mongoDB has collections.
+collections have fields.
+tables -> collections
+columns -> fields
+rows -> documents
+
+show dbs
+admin   40.00 KiB
+config  12.00 KiB
+local   64.00 KiB
+
+use school  // makes school db automatically
+switched to db school
+
+show dbs
+admin   40.00 KiB
+config  92.00 KiB
+local   64.00 KiB
+school  64.00 KiB
+
+db.students.insertOne({"name": "Ram", "age": 20}) // makes students collections and inserts document(json format)
+// and adds unique ObjectId
+{
+  acknowledged: true,
+  insertedId: ObjectId('69e3d26ae6ee4b984837eabe')
+}
+
+show collections
+students
+
+db.students.insertOne({"name": "Shyam", "age": 10})
+{
+  acknowledged: true,
+  insertedId: ObjectId('69e3d27ee6ee4b984837eabf')
+}
+
+db.students.find() // also db.students.find().pretty
+{
+  _id: ObjectId('69e3d26ae6ee4b984837eabe'),
+  name: 'Ram',
+  age: 20
+}
+{
+  _id: ObjectId('69e3d27ee6ee4b984837eabf'),
+  name: 'Shyam',
+  age: 10
+}
+
+db.students.find({name: "Ram"}) // this also works, db.students.find({"name": "Ram"})
+{
+  _id: ObjectId('69e3d26ae6ee4b984837eabe'),
+  name: 'Ram',
+  age: 20
+}
+
+db.students.deleteOne({"name": "Ram"})
+{
+  acknowledged: true,
+  deletedCount: 1
+}
+
+
+================================================== ORM ==============================================================
+ORM - Object Relational Model. Technique to map java objects to database tables
+Work on java, effects reflected in DB
+frameworks like hibernate
+maps fields of a class to columns of a DB table
+
+JPA - Java Persistence API, a way to achieve ORM, set of annotations and interfaces to use with java classes.
+Implemented using tools like hibernate
+
+Spring JPA - built on top of JPA. Makes working with JPA easier
+
+JPA is used with relational DBs, not with nosql DBs like mongo
+
+Spring Data MongoDB will be used for similar functionality with mongo
+
+
+
+============================================== mongoDB integration with spring =====================================
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-mongodb</artifactId>
+		</dependency>
+the above dependency needs to be added to pom for mongo
+
+In src -> main -> resources -> application.properties, add the following configs for mongo
+spring.data.mongodb.host=localhost
+spring.data.mongodb.port=27017
+spring.data.mongodb.database=myjournal
+#spring.data.mongodb.username=myuser
+#spring.data.mongodb.password=mypassword
+
+
+API flows like this
+controller -> service -> repository
+controller receives the API request, service deals with the request, repository works with DB
+Best practice to make separate packages for all of them
+
+
+POJO Entry
+First in our entity package we map our pojo class with a mongo collection
+@Document(collection = "journal_entries"): a class annotation to map our pojo, the parameter is optional
+it tells to which collection of mongo do we map our pojo, if none is given then it does some default mapping
+
+@Id: a field annotation, added to the field which we will use as unique identifier for the document
+
+
+In repository package we make an interface that extends the mongo interface
+public interface JournalEntryRepo extends MongoRepository<JournalEntry, ObjectId> {
+}
+JournalEntry is the class that we map with our mongo db, the second parameter ObjectId is the unique identifier
+for the document in collection in mongo db
+
+This interface will call the already provided methods to interact with mongo. Spring handles everything. No
+@Component annotation needed, spring will make the object.
+
+
+Service
+In our service class, we annotate it with @Component.
+We @Autowired our repo interface
+and do all operations using that autowired repo object
+
+@Autowired
+private JournalEntryRepo journalEntryRepo;
+
+
+Controller
+Things remain almost same as before.
+We auto wire our service class and call it's methods to do the actual work
+    @Autowired
+    JournalEntryService journalEntryService;
+
+
+
+=================================================== Response Codes ==================================================
+1. 1xx -> informational, rarely used
+
+2. 2xx -> success
+   200 -> OK, req successfully processed and server is returning the resource that it was asked for, GET
+   201 -> CREATED, success and new resource has been successfully created, POST
+   204 -> NO CONTENT, success but no response body, usually when there is nothing to be returned, DELETE
+
+3. 3xx -> when client needs to take additional steps to get the resource
+   301 -> resource moved permanently to new url. Client can cache the new url
+   302 -> moved temporarily
+
+4. 4xx -> client error
+   400 -> bad request from client. Malformed req
+   401 -> unauthorized. wrong password username.
+   403 -> forbidden. no permission to access the resource for client
+
+5. 5xx -> server side error
+   500 -> internal server error. generic server side error message
+   502 -> bad gateway. gateway server received bad response from upstream server
+   503 -> service unavailable. server cannot process the req now due to overload or maintenance
+
+=============================================== Response Entity Class ===============================================
+Part of spring boot to customise http response
+can set status code, headers, body
+can send xml, html response
+
+
+=================================================== Project Lombok ==================================================
+reduces boilerplate code by generating them during compilation
+things like getters, setters, toString, constructors
+keeps project clean, codebase not filled with boiler plates
+uses annotations to indicate what to generate
+
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
+@Builder
+
+@Data - has @Getter, @Setter, @ToString, @RequiredArgsConstructor
+
+@NonNull: does null checks when used on fields
+
+
+=================================================== Advanced Mongo ================================================
+@Indexed(unique = true): Can index on a field, also can have unique check, default it is set to false
+spring.data.mongodb.auto-index-creation=true. Have to add this config to enable indexing
+
+@DBRef: Can be used to reference another collection, like a foreign key
+But all mapping has to be done manually
+ex, a user will have journal entries, so to save a journal entry for a particular user, we first save the
+journal entry and then map that entry for the user.
+To get journal entries of a user, we first get the user then from it we will get references to all journal entries
+
+Deletion doesn't have cascade delete like SQL, have to do manually.
+First delete journal reference from user and then delete the journal entry
+If we don't delete reference from user or delete journal entry first and then try to delete reference from user
+then we will have inconsistency
+Though on the next request, spring will fix this inconsistency
+
+
+==================================================== Transactions ================================================
+@Transactional: method annotation. makes the method atomic. all or nothing
+everything in the method should happen successfully as a single unit.
+If any failure happens in between processing then everything that has been processed till now, should
+be reverted back
+
+@EnableTransactionManagement: added to the main class. tells spring to find all transactional methods.
+Spring boot will make transactional context for every transactional method that it finds. A container that
+will have DB operations related to that method and all will treat all of them as a single operation. Atomicity.
+If any one of them fails, everything will be rolled back.
+
+Isolation is also achieved. There will be separate transactional context(container) per request.
+
+All of this is done by TransactionManager(an interface). Implemented by MongoTransactionManager(class by mongo).
+Has methods like, commit, rollback, abort
+
+
+Mongo Atlas: username: rrajeshru964_db_user   pass: N49HLbcXyy24L6lJ
+compass connection string: mongodb+srv://rrajeshru964_db_user:N49HLbcXyy24L6lJ@cluster0.isvdtul.mongodb.net/
+
+
+
+==================================================== Spring Security ================================================
+1. Spring security: framework used to handle authentication and authorization
+2. Authentication: process of verifying a user's identity
+3. Authorization: process of granting or denying access to specific resources or actions based on the authenticated
+   user's role and permission (eg, admin role, read role)
+4. By default, spring security uses HTTP Basic Authentication
+5. HTTP basic authentication: the client sends an authorization header, Authorization: Basic<encoded-string>
+   The server decodes the string, extracts the username and password, and verifies them.
+   If they're correct, access is granted. Otherwise, an "Unauthorized" response is sent back.
+6. Encoded string: credentials are combined into a string like, username:password which is then encoded using Base64
+7. By default, all endpoints will be secured. Spring security will generate a default user with a random
+   password that is printed in the console logs on startup.
+9. username and password can also be configured in application.properties
+   spring.security.user.name=user
+   spring.security.user.password=password
+10. spring security provides a default username, password for securing API endpoints.
+    username: user, password: 6f2ee40e-9941-4146-b346-a49bcdb9a367, the password is printed on console when program starts
+11. When you send request from postman, you can set, auth -> basic auth, add user name and password.
+12. You can also add a header, Authorization, and for its value, go to any base64 encoder website, encode
+    Basic username:password, and use this encoded value
+13. Few problems with this approach:
+        All endpoints have been secured, we can't decide which endpoints to secure, we may need some to be public
+        Only one default user
+14. @EnableWebSecurity: This annotation signals spring to enable its web security support. This is what makes your
+    application secure. Used in conjunction with @Configuration. Helps customise spring security
+15. WebSecurityConfigurerAdapter: A utility class in spring security. Provides default configs.
+    Allows customisation of certain features. By extending it, you can configure and
+    customise spring security for your application needs
+16. configure method in WebSecurityConfigurerAdapter: This method provides a way to configure
+    how requests are secured. It defines how request matching should be done and what security
+    actions should be applied. Kia secure karna hai, kis tarah se karna hai.
+
+-------------------------------------------------
+configurations and methods in configure method
+17. http.authorizeRequests(): this tells spring security to start authorizing the requests.
+18. .antMatchers("/hello").permitAll(): this part specifies that HTTP requests matching the path
+    /hello should be permitted(allowed) for all users, whether they are authenticated or not
+            Permits all requests to /hello without authentication
+19. .anyRequest().authenticated(): this is a more general matcher that specifies any request
+    (not already matched by previous matchers) should be authenticated, meaning users have to provide
+    valid credentials to access these endpoints
+              Any other requests need to be authenticated and a form-based login will be used.
+20. .and(): this is a method to join several configurations. It helps to continue the configuration
+    from the root(HttpSecurity)
+21. .formLogin(): this enables form-based authentication. By default, it will provide a form for the
+    user to enter their username and password. If the user is not authenticated and they try to
+    access a secured endpoint, they'll be redirected to the default login form.
+
+22. You can access /hello without any authentication. However, if you try to access another endpoint,
+    you'll be redirected to a login form.
+23. When we use the .formLogin() method in our security config without specifying
+    .loginPage("/custom-path"), the default login page becomes active.
+24. Spring security provides an in-built controller that handles the /login path.
+    This controller is responsible for rendering the default login form when a GET
+    request is made to /login.
+25. By default, spring security also provides logout functionality. When .logout() is
+    configured, a POST request to /logout will log the user out and invalidate their session.
+
+26. Basic authentication, by its design, is stateless. Username and password must be sent along
+    with every request
+27. Some applications do mix basic authentication with session management for various reasons.
+    This isn't standard behaviour and requires additional setup and logic. In such scenarios,
+    once the user's credentials are verified via basic authentication, a session might be established
+    and the client is provided a session cookie. This way the client won't need to send the
+    authorization header with every request, and the server can rely on the session cookie to identify
+    the authenticated user.
+28. When you log in with spring security, it manages your authentication across multiple requests, despite
+    HTTP being stateless.
+
+    a. Session creation: after successful authentication, an HTTP session is formed. Your authentication
+       details are stored in this session.
+    b. session cookie: A JSESSIONID cookie is sent to your browser, which gets sent back with subsequent
+       requests, helping the server recognize your session
+    c. SecurityContext: Using the JSESSIONID, spring security fetches your authentication details for each request.
+    d. Session Timeout: Sessions have a limited life. If you're inactive past this limit, you're logged out.
+    e. Logout: When logging out, your session ends, and the related cookie is removed.
+    f. Remember me: Spring security can remember you even after the session ends using a different
+       persistent cookie(typically have a longer lifespan).
+
+    In essence, spring security leverages sessions and cookies, mainly JSESSIONID, to ensure you
+    remain authenticated across requests.
+
+
+29. We want our spring boot app to authenticate users based on their credentials stored in mongoDB database.
+    This means that our users and their passwords(hashed) will be stored in mongo, when a user tries to login,
+    the system should check the provided credentials against what's stored in the DB.
+
+30. csrf: Cross Site Request Forgery. Enabled by default in spring security, spring expects in req we will send
+    a csrf token too. Not necessary when requests are stateless
+
+31. Role based authorization: .antMatchers("/admin/**", "/user/**").hasRole("ADMIN"). Need to add this config in
+    spring security config. UserDetailsImpl has method to make userDetails, in there we are adding role also
+
+
+======================================================= YAML ========================================================
+1. classpath: path where jvm searches for .class files(bytecode), jars(libs?), properties
+2. configs can be given in application.properties, also in application.properties
+3. both of these are stored at, project-name -> src -> resources
+4. yaml uses indentation to indicate sub-resources inside resources
+    eg, this in props file, spring.data.mongodb.uri
+    becomes in yml
+    spring:
+      data:
+        mongodb:
+          uri:
+5. If both props file and yml file exists and has same properties, then precedence will be given
+   to props file value
+6. properties can also be given in command line, while running the jar
+   java -jar <jar-name> --server.port=9090
+7. priority order = command line then props file then yml file
+8. can add command line args from intellij itself, settings -> edit configurations -> program arguments
+
+
+====================================================== JUnit ==================================================
+1. used to test code
+2. tests written in src -> main -> test -> java
+3. write same package name as in source code, write same class name, add Tests at end
+4. @Test: indicates method to run for testing
+5. @Disabled: doesn't run the particular disabled test method
+6. @SpringBootTest: needed to initialise our application, make beans, components. Similar to @SpringBootApplication
+7. in test methods, use assert() methods, many different types of assert method available
+8. to run test with different values, use @ParameterizedTest, add values using @CsvSource
+   eg,     @CsvSource({
+                   "1,1,2",
+                   "2,2,5"
+           })
+   and add parameters in the test method
+9. @BeforeEach / @BeforeAll: some setup code to run before each/all tests
+10. @AfterEach / @AfterAll, similar
+11. run tests with coverage, will show how much code, how many lines of code have been tested
+
+
+=================================================== Mockito =====================================================
+1. for junit, every resource is initialized and everything is done but for big applications it can take time
+   so instead of using real resources, we can use mock resources using mockito.
+   So for testing code related to suppose User, we will get a dummy user, no need to make db connection, fetching
+   user from DB
+
+
+=================================================== Profiles ===================================================
+1. Different configs for dev, prod, etc
+2. make diff yml files for different profile, eg, application-dev.yml
+3. in application.yml(default profile uses this), set this prop, spring.profiles.active: dev
+4. if there are common configs in different ymls, we can set it only once in application.yml, no need to set
+   separately in different profiles
+5. But in prod we can't change profile manually, then commit, then make jar
+   we can give property while running jar, java -jar <jar-name> --spring.profiles.active=dev
+6. For making jar with maven, which includes test files, we have to first run mvn clean, with additional properties
+   mvn clean package -D spring.profiles.active=dev
+   -D specifies system property
+   If there were no test classes, we could have simply written, mvn clean package
+7. Can also have different configs based on profiles too, @Profile("dev"), class level annotation, like used
+   in SpringSecurity class.
+   Basically make beans based on profiles
+8. can add multiple profiles in active profiles, separated by comma
+
+
+=================================================== Logging=========================================================
+1. Frameworks for logging:
+    a. Logback: spring boot default. Flexible configuration and good performance
+    b. Log4j2: advanced features like asynchronous logging
+    c. Java Util Logging(JUL): java default. less features. part of jvm. if you need to upgrade this framework
+       then need to update jvm
+
+2. To customise logback configs, make logback.xml in src/main/resources
+3. Logging levels: TRACE, DEBUG, INFO, WARN, ERROR
+4. @Slf4j: class annotation, automatically makes logger instance, else we would have to manually write something like,
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
+5. We can define logging levels, check yaml. If we define a level, only those level logs and more severe than those
+   will get printed. Severity level: TRACE < DEBUG < INFO < WARN < ERROR
+   So if level is set to WARN then only warn and error logs will be printed
+6. log levels can be defined per package level
+7. log level can also be defined as root, everything will use that log level, even spring internal libs
+   logging.level.root: ERROR
+8. can also turn off logging, logging.level.root: OFF
+9. logging levels can be defined at class level too, just give the class name
+    logging.level.net.engineeringdigest.journalApp.service.UserService: OFF
+10. logging levels can also be defined in xml, logback.xml, check the file to see how to write the configs
+
+
+========================================================== SonarQube===========================================
+1. used to identify issues in code, bugs, vulnerabilities, code smells
+2. download sonarqube, run it, runs locally on, localhost:9000
+3. add sonar plugin in pom
+4. mvn clean install sonar:sonar, this will automatically add to sonar
