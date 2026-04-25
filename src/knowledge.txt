@@ -586,3 +586,4 @@ configurations and methods in configure method
 2. download sonarqube, run it, runs locally on, localhost:9000
 3. add sonar plugin in pom
 4. mvn clean install sonar:sonar, this will automatically add to sonar
+
