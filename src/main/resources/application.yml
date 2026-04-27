@@ -1,0 +1,51 @@
+spring:
+  profiles:
+    active: dev
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: rrajeshru964@gmail.com
+    password:
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  kafka:
+    bootstrap-servers: localhost:9888
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: weekly-sentiment-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring:
+          json:
+            trusted:
+              packages: net.engineeringdigest.journalApp.model
+    properties:
+      security:
+        protocol: SASL_SSL
+      sasl:
+        mechanism: PLAIN
+        jaas:
+          config: org.apache.kafka.common.security.plain.PlainLoginModule required username='fsdfdf' password='sdsfg';
+      session:
+        timeout:
+          ms: 45000
+
+
+logging:
+  level:
+    net:
+      engineeringdigest:
+        journalApp: DEBUG
+
+weather:
+  api:
+    key: eb3e9605dd33a948ac504b7e0e2efd29

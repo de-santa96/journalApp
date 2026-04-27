@@ -84,6 +84,13 @@ Don't use singleton scope. Use these instead
 @RequestScope → one per HTTP request
 @SessionScope → one per user session
 
+
+To make beans we can use:
+@Component
+@Bean
+@RestController: used in controllers, for rest api mappings
+@Service: should be used in service classes, indicates class where business logic is written. Best practice
+
 ============================================== SpringBootApplication ============================================
 @SpringBootApplication - class annotation, applied only once in the project, on the main class(class which has
 main method).
@@ -172,6 +179,15 @@ url: ip:port/journal/id/2, here 2 is the path variable
 In @GetMapping("/id/{myId}"), {myId} is the path variable. In @PathVariable, variable name should be same as in
 @GetMapping
 
+
+API keys can be injected from ymls instead of hardcoding in code using @Value annotation, field annotation
+@Value("${weather.api.key}")
+make sure the field is not static, since spring makes beans and static is class level field, spring
+will not mess with them
+
+API requests can be sent using RestTemplate, make sure to make a method to return an instance in the main class.
+ResponseEntity will have the api response, can use a pojo to hold the json response
+ResponseEntity<WeatherResponse> response = restTemplate.exchange(finalApi, HttpMethod.GET, null, WeatherResponse.class);
 
 ==================================================== MongoDB ====================================================
 default url- mongodb://localhost:27017
@@ -396,8 +412,6 @@ All of this is done by TransactionManager(an interface). Implemented by MongoTra
 Has methods like, commit, rollback, abort
 
 
-Mongo Atlas: username: rrajeshru964_db_user   pass: N49HLbcXyy24L6lJ
-compass connection string: mongodb+srv://rrajeshru964_db_user:N49HLbcXyy24L6lJ@cluster0.isvdtul.mongodb.net/
 
 
 
@@ -407,7 +421,7 @@ compass connection string: mongodb+srv://rrajeshru964_db_user:N49HLbcXyy24L6lJ@c
 3. Authorization: process of granting or denying access to specific resources or actions based on the authenticated
    user's role and permission (eg, admin role, read role)
 4. By default, spring security uses HTTP Basic Authentication
-5. HTTP basic authentication: the client sends an authorization header, Authorization: Basic<encoded-string>
+5. HTTP basic authentication: the client sends an authorization header, Authorization: Basic <encoded-string>
    The server decodes the string, extracts the username and password, and verifies them.
    If they're correct, access is granted. Otherwise, an "Unauthorized" response is sent back.
 6. Encoded string: credentials are combined into a string like, username:password which is then encoded using Base64
@@ -587,3 +601,158 @@ configurations and methods in configure method
 3. add sonar plugin in pom
 4. mvn clean install sonar:sonar, this will automatically add to sonar
 
+
+
+========================================================= GIT ========================================================
+1. initializing project with git
+    a. install git bash or wsl
+    b. navigate to project dir
+    c. git init, initialize git in the project dir
+    d. git add .
+    e. git commit -m "first commit"
+    f. git config --global user.email "<github email>", find github email in github
+       git config --global user.name "<name>"
+       configures git identity
+    g. make a repo in github
+    h. git remote add origin <url of the gh repo>, remote origin points to github repo url
+    i. git remote -v, check if remote has been set
+    j. git push origin main
+    k. connect to github by signing in using browser
+
+
+===================================================== Post Construct ===================================================
+1. When we add @PostConstruct annotation to a method, that method is called as soon as the bean is made.
+2. Usage examples: we can store our configs in ymls, we can also save them in our DB. But everytime sending req to DB
+   for any config, can make our app slow. So we make a cache class and an method to initialise our cache and make
+   that method @PostConstruct so that it runs as soon as our app starts
+
+===================================================== MongoDB criteria =================================================
+1. To make custom mongo queries, we use Query, Criteria, MongoTemplate.
+   Criteria makes queries, add those queries to Query, run the query using mongoTemplate
+2. Object DB mapping can be done here too. Add the pojo name to mongoTemplate
+3. NOTE: Add @NoArgsConstructor and @AllArgsConstructor to our pojo, else there might be issue in making the object
+4. match query: query.addCriteria(Criteria.where("userName").is("vipul"))
+5. can do range queries using lt, lte, gt, gte
+6. add regex in match query, query.addCriteria(Criteria.where("email").regex(""))
+7. can chain queries, query.addCriteria(Criteria.where("email").exists(true).ne(null).ne(""));
+8. not equals using ne
+9. and/or can also be done. default adding multiple criteria is and operator
+        Criteria criteria = new Criteria();
+        query.addCriteria(criteria.andOperator(
+                Criteria.where("email").exists(true),
+                Criteria.where("sentimentAnalysis").is(true)
+        ));
+10. check exists in list using, in/nin(not in)
+
+
+====================================================== CRON ==========================================================
+1. @Scheduled(cron = "0 * * * * *"). Method annotation, just add this to a method, and it will run according to the
+   cron expression
+2. @EnableScheduling. Class annotation. Also add this to our main class. to enable scheduling
+
+
+
+======================================================= WSL ============================================================
+1. Installation
+   run wsl --install, in powershell
+   reboot
+   search wsl, open it
+   check by running ls
+   check in powershell, run wsl -l -v
+
+======================================================= redis ==========================================================
+1. install wsl, then run
+    curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
+
+    echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
+
+    sudo apt-get update
+    sudo apt-get install redis
+
+    sudo service redis-server start
+
+    redis-cli
+
+
+2. the serializer/deserializer in spring boot redisTemplate is different from that of redis cli. So if we add something
+   using our spring boot app, it can't be viewed in cli and similarly what we set in cli, we cannot see in spring boot
+3. make a configuration class for redisTemplate, set string serialiser/deserialiser
+
+4. we can give a ttl to redis keys, redisTemplate.opsForValue().set(key, s, ttl, TimeUnit.SECONDS);
+5. we will be saving values as string, so if we pass values as objects, we need to convert them to strings,
+
+   ObjectMapper objectMapper = new ObjectMapper();
+   String s = objectMapper.writeValueAsString(value);
+
+
+6. Again while reading values from redis, we will get string values, to convert them to pojos, we have to use objectMappers
+
+   ObjectMapper objectMapper = new ObjectMapper();
+   Object o = redisTemplate.opsForValue().get(key);
+   T t = objectMapper.readValue(o.toString(), entityClass);
+
+   T is for generic, entityClass is the class of our pojo
+
+   public <T> T get(String key, Class<T> entityClass){
+
+   }
+
+   refer redis service class.
+
+
+============================================================== KAFKA ================================================
+1. kafka properties in yml file
+   properties like serializers/deserializers. Need Json Serializers for sending pojo directly
+2. use, private KafkaTemplate<String, SentimentData> kafkaTemplate; to send data
+   kafkaTemplate.send("weekly-sentiment", sentimentData.getEmail(), sentimentData);
+   sentimentData is a pojo and we are sending it directly
+
+   as a fallback we can send data synchronously, in our try catch block
+
+3. for consumer, we just annotate our consumption method with @kafkaListener
+   @KafkaListener(topics = "weekly-sentiment", groupId = "weekly-sentiment-group")
+
+    @KafkaListener(topics = "weekly-sentiment", groupId = "weekly-sentiment-group")
+    public void consume(SentimentData sentimentData){
+        sendEmail(sentimentData);
+    }
+
+    we are again consuming the data and deserializing to our pojo
+
+
+
+============================================================== JWT ===================================================
+1. JWT: Json Web Token, a way to securely transmit information between parties as a JSON object
+2. Uses base64 url encoding
+3. Is a string consisting of 3 parts, separated by dots. Header Payload Signature
+4. Header: consists of two parts, the type of token(JWT) and the signing algorithm being used,
+   like HMAC, SHA256, RSA
+   {
+      "alg": "HS256",
+      "typ": "JWT"
+   }
+5. Payload: contains the claims. Claims are statements about an entity(typically, the user) and additional metadata
+    {
+        "email": "email@gmail.com",
+        "name": "John Doe"
+    }
+    basically the data we send
+6. Signature: The signature is used to verify that the sender of the JWT is who it says it is.
+   And to ensure that the message wasn't changed along the way.
+   To create the signature part, you have to take the encoded header, the encoded payload, a secret,
+   the algorithm specified in the header, and sign that.
+7. JWT has an expiration, that can be set while generating the token
+8. secret key is used to generate token, just a long random string.
+9. secret key is used to sign the jwt token, using some algorithms
+10. subject is the unique identifier, like username
+11. while verifying the token, we can again use the secret key that is made using the secret key string and algo
+12. also check expiration of the token
+13. claims can be empty, but headers need, "typ": "JWT"
+14. in our spring security, we need to add a jwt filter, filter is added 'Before'
+15. in jwt filter we call the token validation code
+16. while user logs in, we can generate the jwt token and send in response
+17. Use HTTPS: Bearer tokens are "possession-based"—anyone who has the token can use it. You must use HTTPS/TLS to
+    encrypt the header and prevent it from being intercepted.
+18. Short Lifespans: Tokens should have a short expiration time (e.g., 15–60 minutes) to minimize damage if compromised.
+19. the token is sent in headers
+    Authorization: Bearer <jwt-token>

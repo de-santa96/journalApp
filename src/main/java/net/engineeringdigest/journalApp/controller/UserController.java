@@ -1,10 +1,12 @@
 package net.engineeringdigest.journalApp.controller;
 
+import net.engineeringdigest.journalApp.api.response.WeatherResponse;
 import net.engineeringdigest.journalApp.entity.JournalEntry;
 import net.engineeringdigest.journalApp.entity.User;
 import net.engineeringdigest.journalApp.repository.UserRepo;
 import net.engineeringdigest.journalApp.service.JournalEntryService;
 import net.engineeringdigest.journalApp.service.UserService;
+import net.engineeringdigest.journalApp.service.WeatherService;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,12 +26,27 @@ public class UserController {
     // controller -> service -> repository
 
     @Autowired
-    UserService userService;
+    private UserService userService;
 
     @Autowired
-    UserRepo userRepo;
+    private UserRepo userRepo;
+
+    @Autowired
+    private WeatherService weatherService;
 
     @GetMapping
+    public ResponseEntity<?> greetings(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        WeatherResponse weatherResponse = weatherService.getWeather("Mumbai");
+        String greetings = "";
+        if(weatherResponse != null){
+            greetings = ". Weather feels like " + weatherResponse.getCurrent().getFeelslike();
+        }
+        return new ResponseEntity<>("Hi " + authentication.getName() + greetings, HttpStatus.OK);
+    }
+
+    @GetMapping("/all")
     public ResponseEntity<?> getAll() {
         List<User> all = userService.getAll();
         if(all != null && !all.isEmpty()){

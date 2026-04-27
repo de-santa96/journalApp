@@ -1,9 +1,6 @@
 package net.engineeringdigest.journalApp.entity;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.Setter;
+import lombok.*;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -18,6 +15,8 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class User {
 
     @Id
@@ -27,6 +26,8 @@ public class User {
     private String userName;
     @NonNull
     private String password;
+    private String email;
+    private boolean sentimentAnalysis;
 
     @DBRef
     private List<JournalEntry> journalEntryList = new ArrayList<>();
