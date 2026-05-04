@@ -180,12 +180,15 @@ url: ip:port/journal/id/2, here 2 is the path variable
 In @GetMapping("/id/{myId}"), {myId} is the path variable. In @PathVariable, variable name should be same as in
 @GetMapping
 
-
+// TODO
+// does not seem a secure way to use api keys
 API keys can be injected from ymls instead of hardcoding in code using @Value annotation, field annotation
 @Value("${weather.api.key}")
 make sure the field is not static, since spring makes beans and static is class level field, spring
 will not mess with them
 
+// TODO
+// why rest template bean needs to be made in main class
 API requests can be sent using RestTemplate, make sure to make a method to return an instance in the main class.
 ResponseEntity will have the api response, can use a pojo to hold the json response
 ResponseEntity<WeatherResponse> response = restTemplate.exchange(finalApi, HttpMethod.GET, null, WeatherResponse.class);
