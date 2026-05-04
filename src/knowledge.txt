@@ -351,6 +351,7 @@ We auto wire our service class and call it's methods to do the actual work
    400 -> bad request from client. Malformed req
    401 -> unauthorized. wrong password username.
    403 -> forbidden. no permission to access the resource for client
+   404 -> not found
 
 5. 5xx -> server side error
    500 -> internal server error. generic server side error message
@@ -416,7 +417,8 @@ All of this is done by TransactionManager(an interface). Implemented by MongoTra
 Has methods like, commit, rollback, abort
 
 
-
+Mongo Atlas: username: rrajeshru964_db_user   pass: N49HLbcXyy24L6lJ
+compass connection string: mongodb+srv://rrajeshru964_db_user:N49HLbcXyy24L6lJ@cluster0.isvdtul.mongodb.net/
 
 
 ==================================================== Spring Security ================================================
