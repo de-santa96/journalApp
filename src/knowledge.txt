@@ -1,3 +1,4 @@
+TEST
 ============================================== ERRORS ========================================
 1. java not working
 - most of the issue is with env variables. path not being set properly.
